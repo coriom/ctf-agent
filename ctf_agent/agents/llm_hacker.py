@@ -1,20 +1,38 @@
-import json
-from typing import Any, Dict, Optional
+# ctf_agent/agents/llm_hacker.py
+from __future__ import annotations
 
-from ..llm.openai_gateway import call_text
-from ..llm.prompts import load_prompt
+import json
+from typing import Any, Dict
+
+from openai import OpenAI
+
 from ..llm.jsonio import must_json
+from ..llm.prompts import load_prompt
+from ..llm.openai_gateway import call_text
+
 
 class LLMHacker:
-    def __init__(self, model: str):
+    """
+    Hybrid mode:
+    - LLM chooses ONE local action (JSON) according to prompts/hacker_system.txt
+    - Orchestrator executes it locally and feeds results back via state/last_exec
+    """
+
+    def __init__(self, client: OpenAI, model: str):
+        self.client = client
         self.model = model
         self.system = load_prompt("hacker_system.txt")
 
-    def pick_action(self, manager_msg: str, state: Dict[str, Any], last_tool_output: Optional[str]) -> Dict[str, Any]:
-        user = {
-            "manager_message": manager_msg,
+    def attempt(self, manager_instruction: str, state: Dict[str, Any]) -> Dict[str, Any]:
+        payload = {
+            "manager_instruction": manager_instruction,
             "state": state,
-            "last_tool_output": last_tool_output,
         }
-        out = call_text(self.model, self.system, json.dumps(user))
+
+        out = call_text(
+            client=self.client,
+            model=self.model,
+            system=self.system,
+            user=json.dumps(payload),
+        )
         return must_json(out)

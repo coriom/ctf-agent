@@ -1,12 +1,17 @@
-import os
+# ctf_agent/llm/openai_gateway.py
+from __future__ import annotations
+
 from openai import OpenAI
 
-def get_client() -> OpenAI:
-    # Uses OPENAI_API_KEY env var by default
-    return OpenAI()
 
-def call_text(model: str, system: str, user: str) -> str:
-    client = get_client()
+def make_client(api_key: str) -> OpenAI:
+    return OpenAI(api_key=api_key)
+
+
+def call_text(client: OpenAI, model: str, system: str, user: str) -> str:
+    """
+    Simple text call (no tools). Used by both Manager and Hacker in hybrid mode.
+    """
     resp = client.responses.create(
         model=model,
         input=[
@@ -14,5 +19,4 @@ def call_text(model: str, system: str, user: str) -> str:
             {"role": "user", "content": user},
         ],
     )
-    # SDK exposes aggregated text output
     return resp.output_text
