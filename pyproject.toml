@@ -1,0 +1,9 @@
+[project]
+name = "ctf-agent"
+version = "0.1.0"
+description = "Local artifact-only CTF solver (WSL Kali compatible)"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+ctf-agent = "ctf_agent.cli:main"
